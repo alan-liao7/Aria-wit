@@ -28,6 +28,7 @@
     "authy": "^1.4.0",
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
+    "fb-messenger-bot-api": "^4.0.0",
     "http-server": "^0.11.1"
   }
 }
