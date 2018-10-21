@@ -25,10 +25,15 @@
   },
   "homepage": "https://github.com/kawsernasim/aria#readme",
   "dependencies": {
+    "apiai": "^4.0.3",
     "authy": "^1.4.0",
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "fb-messenger-bot-api": "^4.0.0",
-    "http-server": "^0.11.1"
+    "http-server": "^0.11.1",
+    "ngrok": "^3.1.0",
+    "node-fetch": "^2.2.0",
+    "node-wit": "^5.0.0",
+    "request": "^2.88.0"
   }
 }
