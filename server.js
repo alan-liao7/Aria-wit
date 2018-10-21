@@ -64,26 +64,6 @@ const fbMessage = (id, text) => {
 	});
 };
 
-const fbTyping = (id, text) => {
-	const body = JSON.stringify({
-		recipient: { id },
-		sender_action: { text },
-	});
-	const qs = 'access_token=' + encodeURIComponent(FB_PAGE_TOKEN);
-	return fetch('https://graph.facebook.com/me/messages?' + qs, {
-		method: 'POST',
-		headers: {'Content-Type': 'application/json'},
-		body,
-	})
-	.then(rsp => rsp.json())
-	.then(json => {
-		if (json.error && json.error.message) {
-			throw new Error(json.error.message);
-		}
-		return json;
-	});
-};
-
 // ----------------------------------------------------------------------------
 // Wit.ai bot specific code
 
@@ -156,6 +136,7 @@ app.post('/webhook', (req, res) => {
 
           // We retrieve the message content
           const {text, attachments} = event.message;
+          const name;
 
           	if (attachments) {
             // We received an attachment
@@ -166,29 +147,33 @@ app.post('/webhook', (req, res) => {
             // We received a text message
             // Let's run /message on the text to extract some entities
             wit.message(text).then(({entities}) => {
+            	console.log(entities);
 	              // You can customize your response to these entities
-	              if(entities.welcome[0].confidence > 0.9){
+	              if(entities.greetings != undefined && entities.greetings[0].confidence > 0.9){
 	              	fbMessage(sender, "Hello! My name is Aria! I can help you cancel a flight reservation or modify an existing flight. How can I assist you?");
 	              }
-	              if(entities.cancel[0].confidence > 0.9){
-	              	fbTyping(sender, "typing_on");
+	              else if(entities.cancel != undefined && entities.cancel[0].confidence > 0.9){
 	              	fbMessage(sender, "Sure thing, can I get your first and last name please?");
 	              }
-	              if(entities.name[0].confidence > 0.9){
-	              	fbTyping(sender, "typing_on");
+	              else if(entities.name != undefined && entities.name[0].confidence > 0.9){
 	              	fbMessage(sender, `Hello, ${entities.name[0].value}!`);
+	             	fbMessage(sender, "Can I get your phone number please?");
 	              }
-	              if(entities.phoneNum[0].confidence > 0.9){
-	              	fbTyping(sender, "typing_on");
-	              	fbMessage(sender, "A verification number has been sent to your phone number to confirm your identity.");
+	              else if(entities.phone_number != undefined && entities.phone_number[0].confidence > 0.9){
+	              	fbMessage(sender, `A verification number has been sent to ${entities.phone_number[0].value} to confirm your identity.`);
+	              	fbMessage(sender, "Please enter your verification number.");
+
+	              	// twilio verification //
+	              	if(userVerified){
+	        			fbMessage(sender, `Thank you ${name}. What is the record locator for the flight?`);
+	              	}
 	              }
-	              if(entities.reservationNum[0].confidence > 0.9){
-	              	fbTyping(sender, "typing_on");
+	              else if(userVerified && entities.reservationNo != undefined && entities.reservationNo[0].confidence > 0.9){
 	              	fbMessage(sender, "Thank you. Please give me a moment while I look up your reservation.");
-	              	fbTyping(sender, "typing_on");
 	              }
-	              // For now, let's reply with another automatic message
-	              fbMessage(sender, "Sorry, could you repeat that please?");
+	              else { // For now, let's reply with another automatic message
+	            	fbMessage(sender, "Sorry, could you repeat that please?");
+	      		  }
           })
             .catch((err) => {
             	console.error('Oops! Got an error from Wit: ', err.stack || err);
